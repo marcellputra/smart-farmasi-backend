@@ -1,0 +1,974 @@
+{% extends 'admin/master.html' %}
+
+{% block body %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="flash-stack">
+            {% for category, message in messages %}
+                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+<section class="dashboard-hero">
+    <div>
+        <span class="hero-kicker">Today in SEHATI</span>
+        <h2>Live SEHATI health operations at a glance.</h2>
+        <p>Monitor patient growth, feature activity, and admin-sensitive actions from one clean control surface.</p>
+    </div>
+    <div class="hero-stamp">
+        <span>{{ active_today }}</span>
+        <strong>New Patients Today</strong>
+    </div>
+</section>
+
+<section class="stats-grid" aria-label="Dashboard statistics">
+    <article class="motion-card stat-card stat-card-green">
+        <div class="stat-card-top">
+            <div>
+                <span class="card-eyebrow">Medication</span>
+                <h3>Medication Scans</h3>
+            </div>
+            <div class="stat-icon"><i class="fas fa-qrcode"></i></div>
+        </div>
+        <div class="stat-value">{{ total_scans }}</div>
+        <div class="progress-container">
+            <div class="progress-info">
+                <span>Usage Rate</span>
+                {% if total_activities > 0 %}
+                    <span>{{ (total_scans / total_activities * 100) | round | int }}%</span>
+                {% else %}
+                    <span>0%</span>
+                {% endif %}
+            </div>
+            <div class="progress-bar-custom">
+                <div class="progress-fill progress-fill-green" style="width: {{ (total_scans / total_activities * 100) if total_activities > 0 else 0 }}%;"></div>
+            </div>
+        </div>
+        <div class="card-footer-custom">
+            <span class="date-badge-custom">{{ total_scans }} Total Scans</span>
+            <span>Top feature</span>
+        </div>
+    </article>
+
+    <article class="motion-card stat-card stat-card-blue">
+        <div class="stat-card-top">
+            <div>
+                <span class="card-eyebrow">Clinical</span>
+                <h3>Symptom Analysis</h3>
+            </div>
+            <div class="stat-icon"><i class="fas fa-stethoscope"></i></div>
+        </div>
+        <div class="stat-value">{{ total_symptoms }}</div>
+        <div class="progress-container">
+            <div class="progress-info">
+                <span>Active Checks</span>
+                {% if total_activities > 0 %}
+                    <span>{{ (total_symptoms / total_activities * 100) | round | int }}%</span>
+                {% else %}
+                    <span>0%</span>
+                {% endif %}
+            </div>
+            <div class="progress-bar-custom">
+                <div class="progress-fill progress-fill-blue" style="width: {{ (total_symptoms / total_activities * 100) if total_activities > 0 else 0 }}%;"></div>
+            </div>
+        </div>
+        <div class="card-footer-custom">
+            <span class="date-badge-custom">{{ total_symptoms }} Checks</span>
+            <span>{{ active_today }} new patients</span>
+        </div>
+    </article>
+
+    <article class="motion-card stat-card stat-card-yellow">
+        <div class="stat-card-top">
+            <div>
+                <span class="card-eyebrow">AI Support</span>
+                <h3>AI Consultations</h3>
+            </div>
+            <div class="stat-icon"><i class="fas fa-robot"></i></div>
+        </div>
+        <div class="stat-value">{{ total_consultations }}</div>
+        <div class="progress-container">
+            <div class="progress-info">
+                <span>Chat Volume</span>
+                {% if total_activities > 0 %}
+                    <span>{{ (total_consultations / total_activities * 100) | round | int }}%</span>
+                {% else %}
+                    <span>0%</span>
+                {% endif %}
+            </div>
+            <div class="progress-bar-custom">
+                <div class="progress-fill progress-fill-yellow" style="width: {{ (total_consultations / total_activities * 100) if total_activities > 0 else 0 }}%;"></div>
+            </div>
+        </div>
+        <div class="card-footer-custom">
+            <span class="date-badge-custom">{{ total_consultations }} Chats</span>
+            <span>{{ total_users }} total users</span>
+        </div>
+    </article>
+</section>
+
+<!-- Analytics & Big Data Section -->
+<section class="analytics-section">
+    <!-- Big Data Summary Banner -->
+    <div class="analytics-summary-banner">
+        <div class="summary-banner-item">
+            <span>Total Volume Aktivitas</span>
+            <strong id="summary-total-volume">-</strong>
+        </div>
+        <div class="summary-banner-item">
+            <span>Fitur Terpopuler</span>
+            <strong id="summary-most-active">-</strong>
+        </div>
+        <div class="summary-banner-item">
+            <span>Pangsa Konsultasi AI</span>
+            <strong id="summary-chats-percent">-</strong>
+        </div>
+        <div class="summary-banner-item">
+            <span>Aktivitas Utama Scan</span>
+            <strong id="summary-scans-percent">-</strong>
+        </div>
+    </div>
+
+    <!-- Chart 1: Line Chart for activity trends -->
+    <div class="analytics-card">
+        <div class="analytics-card-header">
+            <div>
+                <span class="header-kicker">Big Data Analytics</span>
+                <h3>Tren Aktivitas Pengguna & Fitur Aplikasi</h3>
+            </div>
+            <div class="analytics-filter-wrapper">
+                <label for="date-range-filter" class="analytics-select-label">Rentang Waktu:</label>
+                <select id="date-range-filter" class="analytics-select">
+                    <option value="7">7 Hari Terakhir</option>
+                    <option value="15">15 Hari Terakhir</option>
+                    <option value="30" selected>30 Hari Terakhir</option>
+                </select>
+            </div>
+        </div>
+        <div class="chart-container-large">
+            <canvas id="activityTrendChart"></canvas>
+        </div>
+    </div>
+</section>
+
+<section class="analytics-grid-three">
+    <!-- Chart 2: Bar Chart for top diseases -->
+    <div class="analytics-card">
+        <div class="analytics-card-header">
+            <div>
+                <span class="header-kicker">Epidemiology</span>
+                <h3>Top 5 Wabah / Penyakit Terpopuler</h3>
+            </div>
+        </div>
+        <div class="chart-container-medium">
+            <canvas id="topDiseasesChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Chart 3: Doughnut Chart for alert levels -->
+    <div class="analytics-card">
+        <div class="analytics-card-header">
+            <div>
+                <span class="header-kicker">Outbreaks Alert</span>
+                <h3>Distribusi Tingkat Kewaspadaan</h3>
+            </div>
+        </div>
+        <div class="chart-container-medium">
+            <canvas id="alertLevelsChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Chart 4: NEW — User Growth per day -->
+    <div class="analytics-card">
+        <div class="analytics-card-header">
+            <div>
+                <span class="header-kicker">User Acquisition</span>
+                <h3>Pertumbuhan Pengguna Baru</h3>
+            </div>
+        </div>
+        <div class="chart-container-medium">
+            <canvas id="userGrowthChart"></canvas>
+        </div>
+    </div>
+</section>
+
+<!-- Viral Disease News Section -->
+<section class="viral-news-section">
+    <div class="analytics-card">
+        <div class="analytics-card-header" style="flex-wrap:wrap; gap:12px;">
+            <div>
+                <span class="header-kicker">Live Intelligence</span>
+                <h3>🔥 Viral Disease News — Paling Banyak Dilihat di Mobile</h3>
+            </div>
+            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                <input type="text" id="news-search" class="analytics-search-input" placeholder="Cari penyakit atau judul..." autocomplete="off">
+                <select id="news-alert-filter" class="analytics-select">
+                    <option value="">Semua Alert Level</option>
+                    <option value="high">🔴 HIGH</option>
+                    <option value="medium">🟠 MEDIUM</option>
+                    <option value="low">🟢 LOW</option>
+                </select>
+                <button id="news-refresh-btn" class="btn-motion btn-motion-compact" type="button">
+                    <i class="fas fa-sync-alt" id="refresh-icon"></i> Refresh
+                </button>
+            </div>
+        </div>
+
+        <div id="viral-news-table-wrapper">
+            <!-- Loading skeleton -->
+            <div id="viral-news-loading" style="padding:40px; text-align:center; color:var(--text-muted, #718096);">
+                <i class="fas fa-circle-notch fa-spin" style="font-size:24px; margin-bottom:12px; display:block;"></i>
+                Memuat berita wabah...
+            </div>
+            <!-- Table -->
+            <div id="viral-news-table-container" style="display:none; overflow-x:auto;">
+                <table class="viral-news-table" id="viral-news-table">
+                    <thead>
+                        <tr>
+                            <th style="width:32px;">#</th>
+                            <th class="sortable-col" data-col="disease_name">Penyakit <i class="fas fa-sort"></i></th>
+                            <th>Judul Berita</th>
+                            <th>Negara</th>
+                            <th class="sortable-col" data-col="alert_level">Alert <i class="fas fa-sort"></i></th>
+                            <th class="sortable-col" data-col="view_count">👁 Views / Score <i class="fas fa-sort"></i></th>
+                            <th>Sumber</th>
+                            <th>Tanggal</th>
+                        </tr>
+                    </thead>
+                    <tbody id="viral-news-tbody">
+                    </tbody>
+                </table>
+                <div id="viral-news-empty" style="display:none; padding:40px; text-align:center;">
+                    <i class="fas fa-newspaper" style="font-size:32px; color:var(--text-muted,#A0AEC0); margin-bottom:12px; display:block;"></i>
+                    <p style="color:var(--text-muted,#718096);">Tidak ada berita yang cocok dengan filter ini.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Load Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+/* ── Viral News Table ─────────────────────────────── */
+.analytics-grid-three {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-bottom: 24px;
+}
+@media (max-width: 1024px) { .analytics-grid-three { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 640px)  { .analytics-grid-three { grid-template-columns: 1fr; } }
+.viral-news-section { margin-bottom: 24px; }
+.analytics-search-input {
+    padding: 8px 14px;
+    border-radius: 10px;
+    border: 1.5px solid var(--outline, #E2E8F0);
+    background: var(--surface-variant, #F8FAFC);
+    color: var(--text-primary, #1A202C);
+    font-size: 13px;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    min-width: 200px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+.analytics-search-input:focus { border-color: var(--main, #0D9488); }
+.viral-news-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    font-family: 'Outfit', sans-serif;
+}
+.viral-news-table thead tr { border-bottom: 2px solid var(--outline, #E2E8F0); }
+.viral-news-table th {
+    padding: 10px 12px;
+    text-align: left;
+    font-weight: 800;
+    color: var(--text-secondary, #718096);
+    white-space: nowrap;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.viral-news-table th.sortable-col { cursor: pointer; user-select: none; }
+.viral-news-table th.sortable-col:hover { color: var(--main, #0D9488); }
+.viral-news-table td {
+    padding: 11px 12px;
+    border-bottom: 1px solid var(--outline, #E2E8F0);
+    color: var(--text-primary, #1A202C);
+    vertical-align: middle;
+}
+.viral-news-table tr:last-child td { border-bottom: none; }
+.viral-news-table tbody tr:hover { background: var(--surface-variant, #F8FAFC); }
+.viral-news-table .title-cell {
+    max-width: 260px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 600;
+}
+.alert-badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+.alert-badge.high   { background: #FEE2E2; color: #DC2626; }
+.alert-badge.medium { background: #FFF3CD; color: #D97706; }
+.alert-badge.low    { background: #DCFCE7; color: #16A34A; }
+.trending-dot {
+    display: inline-block;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #EF4444;
+    margin-right: 5px;
+    animation: tpulse 1.4s infinite;
+}
+@keyframes tpulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+.views-cell { font-weight: 800; font-variant-numeric: tabular-nums; }
+</style>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let activityChart = null;
+    let diseaseChart = null;
+    let alertChart = null;
+    let userGrowthChart = null;
+    let lastFetchedData = null; // Cache last fetched data for dynamic theme updates
+    // Viral news state
+    let viralNewsData = [];
+    let viralSortCol = 'view_count';
+    let viralSortAsc = false;
+    let searchDebounceTimer = null;
+
+    function getThemeColors() {
+        const rootStyle = getComputedStyle(document.documentElement);
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        
+        return {
+            main: rootStyle.getPropertyValue('--main').trim() || '#FF6B6B',
+            accent: rootStyle.getPropertyValue('--accent').trim() || '#4ECDC4',
+            yellow: rootStyle.getPropertyValue('--yellow').trim() || '#FFE66D',
+            orange: rootStyle.getPropertyValue('--orange').trim() || '#FF922B',
+            black: rootStyle.getPropertyValue('--black').trim() || '#2D3436',
+            white: rootStyle.getPropertyValue('--white').trim() || '#FFFFFF',
+            gridColor: isDark ? 'rgba(241, 242, 246, 0.15)' : 'rgba(45, 52, 54, 0.15)',
+            textMuted: isDark ? '#A0AEC0' : '#718096'
+        };
+    }
+
+    function updateSummaryBanner(summary) {
+        if (!summary) return;
+        document.getElementById('summary-total-volume').textContent = summary.total_volume.toLocaleString();
+        document.getElementById('summary-most-active').textContent = summary.most_active_feature;
+        document.getElementById('summary-chats-percent').textContent = summary.chats_percentage + '%';
+        document.getElementById('summary-scans-percent').textContent = summary.scans_percentage + '%';
+    }
+
+    function renderCharts(data) {
+        const colors = getThemeColors();
+        
+        // Define common Font Options
+        const fontConfig = {
+            family: "'Outfit', sans-serif",
+            size: 12,
+            weight: '600'
+        };
+
+        // Define Soft Clinical Tooltip config
+        const tooltipConfig = {
+            backgroundColor: colors.white,
+            titleColor: colors.black,
+            bodyColor: colors.black,
+            titleFont: { family: "'Outfit', sans-serif", weight: '800', size: 13 },
+            bodyFont: { family: "'Outfit', sans-serif", weight: '600', size: 12 },
+            borderColor: colors.gridColor,
+            borderWidth: 1,
+            cornerRadius: 8, // Soft corners
+            padding: 10,
+            displayColors: true,
+            boxWidth: 8,
+            boxHeight: 8,
+            boxPadding: 4
+        };
+
+        // 1. Render Activity Trend Chart (Line Chart)
+        const ctxActivity = document.getElementById('activityTrendChart').getContext('2d');
+        if (activityChart) {
+            activityChart.destroy();
+        }
+        
+        activityChart = new Chart(ctxActivity, {
+            type: 'line',
+            data: {
+                labels: data.activities.labels.map(d => {
+                    const parts = d.split('-');
+                    return `${parts[2]}/${parts[1]}`; // format as DD/MM
+                }),
+                datasets: [
+                    {
+                        label: 'Medication Scans',
+                        data: data.activities.scans,
+                        borderColor: colors.accent,
+                        backgroundColor: 'rgba(14, 165, 233, 0.05)',
+                        borderWidth: 3,
+                        tension: 0.3, // Soft curve
+                        pointBackgroundColor: colors.accent,
+                        pointBorderColor: colors.white,
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        fill: true
+                    },
+                    {
+                        label: 'Symptom Checks',
+                        data: data.activities.symptoms,
+                        borderColor: '#54A0FF',
+                        backgroundColor: 'rgba(84, 160, 255, 0.05)',
+                        borderWidth: 3,
+                        tension: 0.3, // Soft curve
+                        pointBackgroundColor: '#54A0FF',
+                        pointBorderColor: colors.white,
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        fill: true
+                    },
+                    {
+                        label: 'AI Chatbot Logs',
+                        data: data.activities.chatbot,
+                        borderColor: colors.main,
+                        backgroundColor: 'rgba(13, 148, 136, 0.05)',
+                        borderWidth: 3,
+                        tension: 0.3, // Soft curve
+                        pointBackgroundColor: colors.main,
+                        pointBorderColor: colors.white,
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            color: colors.black,
+                            font: fontConfig,
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            padding: 20
+                        }
+                    },
+                    tooltip: tooltipConfig
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            color: colors.gridColor,
+                            lineWidth: 1
+                        },
+                        ticks: {
+                            color: colors.black,
+                            font: fontConfig
+                        },
+                        border: {
+                            color: colors.gridColor,
+                            width: 1
+                        }
+                    },
+                    y: {
+                        grid: {
+                            color: colors.gridColor,
+                            lineWidth: 1
+                        },
+                        ticks: {
+                            color: colors.black,
+                            font: fontConfig,
+                            precision: 0
+                        },
+                        border: {
+                            color: colors.gridColor,
+                            width: 1
+                        }
+                    }
+                }
+            }
+        });
+
+        // 2. Render Top Diseases Chart (Horizontal Bar Chart)
+        const ctxDisease = document.getElementById('topDiseasesChart').getContext('2d');
+        if (diseaseChart) {
+            diseaseChart.destroy();
+        }
+        
+        diseaseChart = new Chart(ctxDisease, {
+            type: 'bar',
+            data: {
+                labels: data.diseases.labels,
+                datasets: [{
+                    label: 'Popularity Score (views / trend)',
+                    data: data.diseases.views,
+                    backgroundColor: colors.orange,
+                    borderWidth: 0,
+                    borderRadius: 6, // Beautiful rounded bars
+                    hoverBackgroundColor: colors.yellow
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: tooltipConfig
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            color: colors.gridColor,
+                            lineWidth: 1
+                        },
+                        ticks: {
+                            color: colors.black,
+                            font: fontConfig
+                        },
+                        border: {
+                            color: colors.gridColor,
+                            width: 1
+                        }
+                    },
+                    y: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: colors.black,
+                            font: fontConfig
+                        },
+                        border: {
+                            color: colors.gridColor,
+                            width: 1
+                        }
+                    }
+                }
+            }
+        });
+
+        // 3. Render Alert Levels Chart (Doughnut Chart)
+        const ctxAlert = document.getElementById('alertLevelsChart').getContext('2d');
+        if (alertChart) {
+            alertChart.destroy();
+        }
+        
+        const alertLabels = Object.keys(data.alerts).map(key => key.toUpperCase());
+        const alertValues = Object.values(data.alerts);
+        
+        alertChart = new Chart(ctxAlert, {
+            type: 'doughnut',
+            data: {
+                labels: alertLabels,
+                datasets: [{
+                    data: alertValues,
+                    backgroundColor: [colors.accent, colors.orange, colors.main], // LOW, MEDIUM, HIGH order
+                    borderColor: colors.white, // Divider line matches theme card background
+                    borderWidth: 2,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            color: colors.black,
+                            font: fontConfig,
+                            boxWidth: 10,
+                            boxHeight: 10,
+                            padding: 15
+                        }
+                    },
+                    tooltip: tooltipConfig
+                },
+                cutout: '65%' // Slightly larger cutout for clean feel
+            }
+        });
+
+        // 4. Render User Growth Chart (Line Chart)
+        if (document.getElementById('userGrowthChart')) {
+            const ctxGrowth = document.getElementById('userGrowthChart').getContext('2d');
+            if (userGrowthChart) userGrowthChart.destroy();
+            userGrowthChart = new Chart(ctxGrowth, {
+                type: 'line',
+                data: {
+                    labels: (data.user_growth ? data.user_growth.labels : []).map(d => {
+                        const p = d.split('-'); return `${p[2]}/${p[1]}`;
+                    }),
+                    datasets: [{
+                        label: 'Pengguna Baru',
+                        data: data.user_growth ? data.user_growth.counts : [],
+                        borderColor: '#7C3AED',
+                        backgroundColor: 'rgba(124,58,237,0.08)',
+                        borderWidth: 2.5,
+                        tension: 0.35,
+                        pointBackgroundColor: '#7C3AED',
+                        pointBorderColor: colors.white,
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: tooltipConfig
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: colors.gridColor },
+                            ticks: { color: colors.black, font: fontConfig },
+                            border: { color: colors.gridColor }
+                        },
+                        y: {
+                            grid: { color: colors.gridColor },
+                            ticks: { color: colors.black, font: fontConfig, precision: 0 },
+                            border: { color: colors.gridColor }
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    function fetchAndRender(days) {
+        const select = document.getElementById('date-range-filter');
+        select.disabled = true; // prevent double clicks
+        
+        fetch(`/admin/api/analytics?days=${days}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('API request failed');
+                }
+                return response.json();
+            })
+            .then(res => {
+                if (res.status === 'success') {
+                    lastFetchedData = res;
+                    updateSummaryBanner(res.summary);
+                    renderCharts(res);
+                }
+            })
+            .catch(err => {
+                console.error('Error fetching analytics data:', err);
+            })
+            .finally(() => {
+                select.disabled = false;
+            });
+    }
+
+    // Dynamic Theme Update for Chart.js
+    function updateChartThemes() {
+        if (!lastFetchedData) return;
+        const colors = getThemeColors();
+        
+        // Update Chart.js defaults
+        Chart.defaults.color = colors.black;
+        
+        // Re-render using last fetched data and updated styles
+        renderCharts(lastFetchedData);
+    }
+
+    // Listen to date range filter changes
+    document.getElementById('date-range-filter').addEventListener('change', function(e) {
+        fetchAndRender(e.target.value);
+    });
+
+    // Listen to theme toggle buttons clicks
+    document.querySelectorAll('[data-theme-toggle]').forEach(button => {
+        button.addEventListener('click', () => {
+            // Tiny timeout to let the DOM attribute update first
+            setTimeout(updateChartThemes, 80);
+        });
+    });
+
+    // Initial fetch (default 30 days)
+    fetchAndRender(30);
+
+    // ── Viral News Table ─────────────────────────────────────────────────
+    function renderViralNewsTable(data, searchTerm) {
+        const tbody = document.getElementById('viral-news-tbody');
+        const emptyEl = document.getElementById('viral-news-empty');
+        const tableEl = document.getElementById('viral-news-table-container');
+        document.getElementById('viral-news-loading').style.display = 'none';
+        tableEl.style.display = 'block';
+
+        let filtered = data;
+        if (searchTerm) {
+            const term = searchTerm.toLowerCase();
+            filtered = data.filter(n =>
+                (n.disease_name || '').toLowerCase().includes(term) ||
+                (n.title || '').toLowerCase().includes(term)
+            );
+        }
+
+        // Sort
+        filtered = [...filtered].sort((a, b) => {
+            let va = a[viralSortCol]; let vb = b[viralSortCol];
+            if (viralSortCol === 'alert_level') {
+                const order = { high: 3, medium: 2, low: 1 };
+                va = order[va] || 0; vb = order[vb] || 0;
+            }
+            if (va < vb) return viralSortAsc ? -1 : 1;
+            if (va > vb) return viralSortAsc ? 1 : -1;
+            return 0;
+        });
+
+        if (filtered.length === 0) {
+            tbody.innerHTML = '';
+            emptyEl.style.display = 'block';
+            return;
+        }
+        emptyEl.style.display = 'none';
+
+        tbody.innerHTML = filtered.map((n, i) => `
+            <tr>
+                <td style="color:var(--text-secondary,#718096); font-weight:700;">${i + 1}</td>
+                <td><strong>${n.disease_name || '-'}</strong></td>
+                <td class="title-cell" title="${n.title}">
+                    ${n.is_trending ? '<span class="trending-dot"></span>' : ''}${n.title}
+                </td>
+                <td>${n.country || 'International'}</td>
+                <td><span class="alert-badge ${n.alert_level}">${n.alert_level.toUpperCase()}</span></td>
+                <td class="views-cell" title="Views: ${n.view_count} | Trend Score: ${n.trend_score}">
+                    ${n.view_count > 0 ? n.view_count.toLocaleString() + ' views' : '<span style="color:var(--text-secondary,#718096);font-size:11px;">score: ' + n.trend_score + '</span>'}
+                </td>
+                <td style="font-size:12px; color:var(--text-secondary,#718096);">${n.source_name || '-'}</td>
+                <td style="font-size:12px; color:var(--text-secondary,#718096); white-space:nowrap;">${n.published_at || '-'}</td>
+            </tr>
+        `).join('');
+    }
+
+    function fetchViralNews(alertLevel) {
+        const loadEl = document.getElementById('viral-news-loading');
+        const tableEl = document.getElementById('viral-news-table-container');
+        const refreshIcon = document.getElementById('refresh-icon');
+        const btn = document.getElementById('news-refresh-btn');
+
+        loadEl.style.display = 'block';
+        tableEl.style.display = 'none';
+        refreshIcon.classList.add('fa-spin');
+        btn.disabled = true;
+
+        const params = alertLevel ? `?alert_level=${alertLevel}` : '';
+        fetch(`/admin/api/viral-news${params}`)
+            .then(r => r.json())
+            .then(res => {
+                if (res.status === 'success') {
+                    viralNewsData = res.news || [];
+                    const search = document.getElementById('news-search').value;
+                    renderViralNewsTable(viralNewsData, search);
+                }
+            })
+            .catch(err => console.error('Viral news fetch error:', err))
+            .finally(() => {
+                refreshIcon.classList.remove('fa-spin');
+                btn.disabled = false;
+            });
+    }
+
+    // Alert filter dropdown
+    document.getElementById('news-alert-filter').addEventListener('change', function() {
+        fetchViralNews(this.value);
+    });
+
+    // Search with debounce
+    document.getElementById('news-search').addEventListener('input', function() {
+        clearTimeout(searchDebounceTimer);
+        const term = this.value;
+        searchDebounceTimer = setTimeout(() => {
+            renderViralNewsTable(viralNewsData, term);
+        }, 280);
+    });
+
+    // Refresh button
+    document.getElementById('news-refresh-btn').addEventListener('click', function() {
+        const alertLevel = document.getElementById('news-alert-filter').value;
+        fetchViralNews(alertLevel);
+    });
+
+    // Sortable column headers
+    document.querySelectorAll('.sortable-col').forEach(th => {
+        th.addEventListener('click', function() {
+            const col = this.dataset.col;
+            if (viralSortCol === col) {
+                viralSortAsc = !viralSortAsc;
+            } else {
+                viralSortCol = col;
+                viralSortAsc = col !== 'view_count'; // views: desc by default
+            }
+            const search = document.getElementById('news-search').value;
+            renderViralNewsTable(viralNewsData, search);
+        });
+    });
+
+    // Initial viral news load
+    fetchViralNews('');
+});
+</script>
+
+<section class="dashboard-main-grid">
+    <div class="activity-list-container">
+        <div class="list-header">
+            <div>
+                <span class="panel-kicker">Real-time Logs</span>
+                <h3>Recent Activity</h3>
+            </div>
+            <button class="btn-motion btn-motion-compact" type="button">
+                <i class="fas fa-filter"></i> Filter
+            </button>
+        </div>
+
+        <div class="activity-items">
+            {% for activity in recent_activities %}
+            <div class="activity-item">
+                <div class="activity-icon-box">
+                    <i class="fas {% if activity.activity_type == 'scan' %}fa-qrcode{% elif activity.activity_type == 'symptom_check' %}fa-stethoscope{% elif activity.activity_type == 'chatbot' %}fa-robot{% else %}fa-user-circle{% endif %}"></i>
+                </div>
+                <div class="activity-main-info">
+                    <div class="activity-item-title">
+                        <span>{{ activity.user.name if activity.user else 'Unknown user' }}</span>
+                        <strong>{{ activity.activity_type.replace('_', ' ') | capitalize }}</strong>
+                    </div>
+                    <div class="activity-description">{{ activity.description or 'No additional details available.' }}</div>
+                </div>
+                <div class="activity-item-meta">
+                    <span class="date-badge-custom">{{ activity.timestamp.strftime('%H:%M | %d %b') }}</span>
+                </div>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon"><i class="fas fa-notes-medical"></i></div>
+                <h4>No activity logs found</h4>
+                <p>Activity from scans, symptom checks, and chatbot sessions will appear here.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <aside class="dashboard-side-stack">
+        <section class="side-panel">
+            <div class="side-panel-header">
+                <div>
+                    <span class="panel-kicker">System</span>
+                    <h3>Health Checks</h3>
+                </div>
+                <span class="status-dot"></span>
+            </div>
+
+            <div class="health-item">
+                <div class="health-title">
+                    <span>API Connectivity</span>
+                    <span class="modern-badge badge-success">Stable</span>
+                </div>
+                <div class="progress-bar-custom thin">
+                    <div class="progress-fill progress-fill-green" style="width: 100%;"></div>
+                </div>
+                <p>Communication with Flutter app is running smoothly at 12ms latency.</p>
+            </div>
+
+            <div class="health-item">
+                <div class="health-title">
+                    <span>AI Model Status</span>
+                    <span class="modern-badge badge-primary">Active</span>
+                </div>
+                <p>Symptom analysis engine is up to date with latest medical datasets.</p>
+            </div>
+        </section>
+
+        <section class="side-panel">
+            <div class="side-panel-header">
+                <div>
+                    <span class="panel-kicker">Users</span>
+                    <h3>Recent Patients</h3>
+                </div>
+                <a href="{{ url_for('user.index_view') }}" class="text-link">View all</a>
+            </div>
+
+            <div class="dashboard-user-list">
+                {% for user in recent_users %}
+                <div class="dashboard-user-row">
+                    <div class="dashboard-user-avatar">
+                        {{ (user.name or user.email or 'U')[0].upper() }}
+                    </div>
+                    <div class="dashboard-user-info">
+                        <div class="dashboard-user-name">{{ user.name or 'Unnamed user' }}</div>
+                        <div class="dashboard-user-email">{{ user.email }}</div>
+                        <div class="dashboard-user-meta">
+                            <span class="modern-badge {{ 'badge-success' if user.is_verified else 'badge-secondary' }}">
+                                {{ 'Verified' if user.is_verified else 'Pending' }}
+                            </span>
+                            <span class="modern-badge {{ 'badge-danger' if user.role == 'admin' else 'badge-other' }}">
+                                {{ user.role or 'user' }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="dashboard-user-actions">
+                        {% if user.id == session.get('user_id') %}
+                            <button class="btn-delete-user" disabled title="Akun yang sedang digunakan tidak bisa dihapus">
+                                <i class="fas fa-lock"></i>
+                            </button>
+                        {% else %}
+                            <form method="post"
+                                  action="{{ url_for('admin.delete_user', user_id=user.id) }}"
+                                  onsubmit="return confirm('Hapus user {{ user.email }}? Data OTP dan aktivitas user ini juga akan dihapus.');">
+                                <button type="submit" class="btn-delete-user" title="Hapus user">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+                {% else %}
+                <div class="empty-state compact">
+                    <div class="empty-state-icon"><i class="fas fa-users"></i></div>
+                    <h4>Belum ada user</h4>
+                    <p>User terbaru akan muncul di panel ini.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="admin-tip">
+            <i class="fas fa-lightbulb"></i>
+            <div>
+                <h3>Admin Tip</h3>
+                <p>Export daily patient activity reports for offline auditing when needed.</p>
+            </div>
+        </section>
+    </aside>
+</section>
+{% endblock %}

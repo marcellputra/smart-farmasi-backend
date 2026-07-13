@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - SEHATI</title>
+    <script>
+        (function () {
+            const key = 'smart-farmasi-admin-theme';
+            try {
+                const saved = localStorage.getItem(key);
+                const systemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                document.documentElement.setAttribute('data-theme', saved || (systemDark ? 'dark' : 'light'));
+            } catch (error) {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        :root {
+            --bg: #F1F5F9;
+            --main: #0D9488;       /* Primary clinical Teal */
+            --accent: #0EA5E9;     /* Secondary Sky Blue */
+            --yellow: #FFE66D;
+            --black: #1E293B;      /* Slate-800 text */
+            --white: #FFFFFF;      /* Panel / Card background */
+            --border: 1px solid #E2E8F0;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+            --shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
+        }
+
+        html[data-theme="dark"] {
+            --bg: #0B0F19;         /* Medical navy dark background */
+            --main: #14B8A6;       /* Bright Teal accent */
+            --accent: #38BDF8;     /* Sky blue accent */
+            --yellow: #F59E0B;
+            --black: #F8FAFC;      /* White-slate text */
+            --white: #111827;      /* Dark Card Background */
+            --border: 1px solid #1F2937;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+            --shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Outfit', sans-serif;
+            color: var(--black);
+            background: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .login-shell {
+            width: 100%;
+            max-width: 1000px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: stretch;
+        }
+
+        .hero-panel {
+            background: linear-gradient(135deg, var(--main), var(--accent));
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            color: #FFFFFF;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-panel::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 450px;
+            height: 450px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.03);
+            pointer-events: none;
+        }
+
+        .brand-chip {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50px;
+            padding: 6px 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+            width: fit-content;
+            margin-bottom: 20px;
+            font-size: 0.8rem;
+            color: #FFFFFF;
+        }
+
+        .hero-panel h1 {
+            font-size: 2.8rem;
+            line-height: 1.1;
+            font-weight: 800;
+            margin: 0 0 20px;
+            text-transform: capitalize;
+            color: #FFFFFF;
+            text-shadow: none;
+            -webkit-text-stroke: 0;
+        }
+
+        .hero-panel h1 span {
+            background: rgba(255, 255, 255, 0.2);
+            color: #FFFFFF;
+            padding: 0 8px;
+            border-radius: 8px;
+            -webkit-text-stroke: 0;
+            display: inline-block;
+        }
+
+        .hero-copy {
+            font-size: 0.95rem;
+            opacity: 0.95;
+            font-weight: 500;
+            line-height: 1.6;
+        }
+
+        .login-card {
+            background: var(--white);
+            border: var(--border);
+            box-shadow: var(--shadow);
+            padding: 40px;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .login-card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 30px;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-icon {
+            width: 52px;
+            height: 52px;
+            background: linear-gradient(135deg, var(--main), var(--accent));
+            border-radius: 12px;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            color: #FFFFFF;
+            margin-bottom: 0;
+            transform: none;
+            box-shadow: 0 8px 16px rgba(13, 148, 136, 0.15);
+        }
+
+        .login-card h2 {
+            font-size: 1.6rem;
+            font-weight: 800;
+            margin: 0;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #64748B;
+            margin-top: 2px;
+            margin-bottom: 0;
+        }
+
+        html[data-theme="dark"] .subtitle {
+            color: #94A3B8;
+        }
+
+        .form-label {
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            color: #64748B;
+            letter-spacing: 0.5px;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        html[data-theme="dark"] .form-label {
+            color: #94A3B8;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: stretch;
+            box-shadow: none !important;
+        }
+
+        .input-group-text {
+            background: var(--bg);
+            border: var(--border);
+            border-right: none;
+            border-radius: 10px 0 0 10px !important;
+            color: #64748B;
+            padding: 0 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        html[data-theme="dark"] .input-group-text {
+            color: #94A3B8;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            background: var(--white);
+            border: var(--border);
+            border-radius: 10px !important;
+            outline: none;
+            transition: all 0.2s ease;
+            color: var(--black);
+            box-shadow: none !important;
+        }
+
+        .input-group .form-control {
+            border-radius: 0 10px 10px 0 !important;
+        }
+
+        .form-control:focus {
+            border-color: var(--main);
+            box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1) !important;
+            transform: none;
+            background: var(--white);
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 12px;
+            background: var(--main);
+            color: #FFFFFF;
+            border: none;
+            font-size: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            border-radius: 10px !important;
+            box-shadow: 0 4px 12px rgba(13, 148, 136, 0.15);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-primary:hover {
+            background: #0b7c77;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(13, 148, 136, 0.25);
+            color: #FFFFFF;
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .divider-text {
+            text-align: center;
+            margin: 20px 0;
+            font-weight: 700;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: #94A3B8;
+            position: relative;
+        }
+
+        .divider-text::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 100%;
+            height: 1px;
+            background: var(--border);
+            z-index: 0;
+        }
+
+        .divider-text span {
+            background: var(--white);
+            padding: 0 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        #google-button-container {
+            border: none;
+            box-shadow: none;
+            padding: 0;
+            background: transparent;
+            display: flex;
+            justify-content: center;
+            margin-top: 15px;
+        }
+
+        .admin-link {
+            text-decoration: none;
+            color: var(--main);
+            border-bottom: 2px solid transparent;
+            font-weight: 700;
+            transition: all 0.2s ease;
+        }
+
+        .admin-link:hover {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        .alert {
+            background: #FEE2E2;
+            color: #B91C1C;
+            border: 1px solid #FCA5A5;
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 20px;
+            box-shadow: none;
+        }
+
+        .alert-success {
+            background: #D1FAE5;
+            color: #065F46;
+            border-color: #A7F3D0;
+        }
+
+        .vitals-card {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 30px;
+            box-shadow: none;
+            transform: none;
+            color: #FFFFFF;
+        }
+
+        .vitals-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: #10B981;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 8px #10B981;
+        }
+
+        .ecg-line {
+            height: 40px;
+            margin-top: 15px;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 40' fill='none' stroke='rgba(255,255,255,0.4)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpath d='M0,20 L60,20 L70,10 L75,30 L80,5 L85,35 L90,20 L100,20 L105,15 L110,25 L115,20 L200,20' /%3e%3c/svg%3e");
+            background-repeat: repeat-x;
+            background-size: auto 100%;
+            animation: scroll-ecg 5s linear infinite;
+        }
+
+        @keyframes scroll-ecg {
+            from { background-position-x: 0; }
+            to { background-position-x: 200px; }
+        }
+
+        .metric-strip {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .metric-pill {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+            box-shadow: none;
+            color: #FFFFFF;
+        }
+
+        .metric-pill strong {
+            display: block;
+            font-size: 1.3rem;
+            font-weight: 800;
+        }
+
+        .metric-pill span {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            opacity: 0.8;
+        }
+
+        .theme-toggle {
+            background: var(--bg);
+            border: var(--border);
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--black);
+        }
+
+        .theme-toggle:hover {
+            background: #E2E8F0;
+            transform: translateY(-2px);
+        }
+
+        html[data-theme="dark"] .theme-toggle:hover {
+            background: #1F2937;
+        }
+
+        .footer-text {
+            grid-column: span 2;
+            text-align: center;
+            font-size: 0.75rem;
+            color: #94A3B8;
+            font-weight: 600;
+            margin-top: 20px;
+            margin-bottom: 0;
+        }
+
+        @media (max-width: 900px) {
+            .login-shell {
+                grid-template-columns: 1fr;
+            }
+            .hero-panel {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="login-shell">
+        <section class="hero-panel" aria-label="SEHATI Admin">
+            <div class="brand-chip">
+                <img src="/static/app_logo.png" alt="SEHATI Logo" style="height: 20px; width: auto; vertical-align: middle; margin-right: 6px;">
+                SEHATI Admin
+            </div>
+            <h1>SEHATI Admin <span>Dashboard</span></h1>
+            <p class="hero-copy">Monitor patient health metrics, AI consultations, medication verification, and epidemic tracking in a clean, modern health workspace.</p>
+
+            <div class="vitals-card" aria-hidden="true">
+                <div class="vitals-head">
+                    <span>System vitals</span>
+                    <span class="live-dot"></span>
+                </div>
+                <div class="ecg-line"></div>
+            </div>
+
+            <div class="metric-strip" aria-hidden="true">
+                <div class="metric-pill">
+                    <strong>24/7</strong>
+                    <span>Access</span>
+                </div>
+                <div class="metric-pill">
+                    <strong>OTP</strong>
+                    <span>Protected</span>
+                </div>
+                <div class="metric-pill">
+                    <strong>Live</strong>
+                    <span>Logs</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="login-card" aria-label="Admin login form">
+            <div class="login-card-top">
+                <div class="logo-area">
+                    <img src="/static/app_logo.png" alt="SEHATI Logo" style="width: 48px; height: 48px; border-radius: 10px; object-fit: contain;">
+                    <div>
+                        <h2>Admin Login</h2>
+                        <p class="subtitle">SEHATI Dashboard</p>
+                    </div>
+                </div>
+                <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle dark mode" title="Toggle dark mode">
+                    <i class="fas fa-moon" data-theme-icon></i>
+                </button>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('admin_auth.login') }}">
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email Address</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="far fa-envelope"></i></span>
+                        <input type="email" class="form-control" id="email" name="email" placeholder="admin@sehati.com" required>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label for="password" class="form-label">Password</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                        <input type="password" class="form-control" id="password" name="password" placeholder="Enter password" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-arrow-right-to-bracket me-2"></i>Sign In
+                </button>
+            </form>
+
+            <div class="divider-text">
+                <span>or</span>
+            </div>
+
+            <div id="google-button-container"></div>
+
+            <div class="mt-4 text-center">
+                <p class="subtitle mb-0">New administrator? <a href="{{ url_for('admin_auth.register') }}" class="admin-link">Create an account</a></p>
+            </div>
+        </section>
+
+        <p class="footer-text">&copy; 2026 SEHATI Health System. All rights reserved.</p>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const adminThemeKey = 'smart-farmasi-admin-theme';
+
+        function getAdminTheme() {
+            try {
+                return localStorage.getItem(adminThemeKey) || document.documentElement.getAttribute('data-theme') || 'light';
+            } catch (error) {
+                return document.documentElement.getAttribute('data-theme') || 'light';
+            }
+        }
+
+        function applyAdminTheme(theme, persist) {
+            document.documentElement.setAttribute('data-theme', theme);
+            if (persist) {
+                try {
+                    localStorage.setItem(adminThemeKey, theme);
+                } catch (error) {}
+            }
+
+            document.querySelectorAll('[data-theme-toggle]').forEach(function (button) {
+                const icon = button.querySelector('[data-theme-icon]');
+                const isDark = theme === 'dark';
+                button.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+                button.setAttribute('title', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+                if (icon) {
+                    icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+                }
+            });
+        }
+
+        function handleCredentialResponse(response) {
+            // Send the ID Token to our backend
+            fetch('/admin/login/google', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ id_token: response.credential }),
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = data.redirect;
+                } else {
+                    alert(data.error || 'Google Login Failed');
+                }
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                alert('An error occurred during Google Login.');
+            });
+        }
+
+        function renderGoogleButton() {
+            const container = document.getElementById("google-button-container");
+            if (!container || !window.google || !google.accounts || !google.accounts.id) {
+                return;
+            }
+
+            container.innerHTML = "";
+            google.accounts.id.renderButton(
+                container,
+                { theme: getAdminTheme() === 'dark' ? "filled_black" : "outline", size: "large", width: "350" }
+            );
+        }
+
+        window.onload = function () {
+            applyAdminTheme(getAdminTheme(), false);
+
+            document.querySelectorAll('[data-theme-toggle]').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    const nextTheme = getAdminTheme() === 'dark' ? 'light' : 'dark';
+                    applyAdminTheme(nextTheme, true);
+                    renderGoogleButton();
+                });
+            });
+
+            google.accounts.id.initialize({
+                client_id: "691571373089-t2r3oajabh78af9r1veh4oc5hhb4ebjg.apps.googleusercontent.com", // Correct Web Client ID
+                callback: handleCredentialResponse
+            });
+
+            renderGoogleButton();
+        };
+    </script>
+</body>
+</html>

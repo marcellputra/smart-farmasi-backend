@@ -1,0 +1,153 @@
+{% extends 'admin/base.html' %}
+
+{% block head_css %}
+    {{ super() }}
+    <script>
+        (function () {
+            const key = 'smart-farmasi-admin-theme';
+            try {
+                const saved = localStorage.getItem(key);
+                const systemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                document.documentElement.setAttribute('data-theme', saved || (systemDark ? 'dark' : 'light'));
+            } catch (error) {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/admin_custom.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block page_body %}
+    <div class="admin-layout">
+        <aside class="admin-sidebar" aria-label="Admin navigation">
+            <div class="sidebar-brand">
+                <div class="brand-mark">
+                    <img src="/static/app_logo.png" alt="SEHATI Logo" style="width: 24px; height: 24px; object-fit: contain; filter: brightness(0) invert(1);">
+                </div>
+                <div>
+                    <div class="brand-name">SEHATI</div>
+                    <div class="brand-subtitle">Admin panel</div>
+                </div>
+            </div>
+
+            <div class="sidebar-card">
+                <div class="sidebar-card-label">Signed in as</div>
+                <div class="sidebar-card-name">{{ session.get('user_name', 'Admin') }}</div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section-title">Main Menu</div>
+                <a href="{{ url_for('admin.index') }}" class="sidebar-nav-link {{ 'active' if request.endpoint == 'admin.index' else '' }}">
+                    <span><i class="fas fa-th-large"></i> Dashboard</span>
+                </a>
+                <a href="{{ url_for('user.index_view') }}" class="sidebar-nav-link {{ 'active' if request.endpoint == 'user.index_view' else '' }}">
+                    <span><i class="fas fa-users"></i> Patient Database</span>
+                </a>
+                <a href="{{ url_for('useractivity.index_view') }}" class="sidebar-nav-link {{ 'active' if request.endpoint == 'useractivity.index_view' and not request.args.get('flt0_0') else '' }}">
+                    <span><i class="fas fa-history"></i> Activity Logs</span>
+                </a>
+
+                <div class="nav-section-title">Smart Features</div>
+                <a href="{{ url_for('useractivity.index_view', flt0_0='scan') }}" class="sidebar-nav-link {{ 'active' if request.endpoint == 'useractivity.index_view' and request.args.get('flt0_0') == 'scan' else '' }}">
+                    <span><i class="fas fa-qrcode"></i> Medication Scans</span>
+                </a>
+                <a href="{{ url_for('useractivity.index_view', flt0_0='symptom_check') }}" class="sidebar-nav-link {{ 'active' if request.endpoint == 'useractivity.index_view' and request.args.get('flt0_0') == 'symptom_check' else '' }}">
+                    <span><i class="fas fa-stethoscope"></i> Symptom Checks</span>
+                </a>
+                <a href="{{ url_for('chathistory.index_view') }}" class="sidebar-nav-link {{ 'active' if request.endpoint == 'chathistory.index_view' else '' }}">
+                    <span><i class="fas fa-robot"></i> AI Chatbot Logs</span>
+                </a>
+                <a href="{{ url_for('diseasenews.index_view') }}" class="sidebar-nav-link {{ 'active' if request.endpoint == 'diseasenews.index_view' else '' }}">
+                    <span><i class="fas fa-newspaper"></i> Disease Alerts</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="#" class="sidebar-nav-link">
+                    <span><i class="fas fa-cog"></i> System Settings</span>
+                </a>
+            </div>
+        </aside>
+
+        <main class="main-content-wrapper">
+            <header class="dashboard-header">
+                <div class="header-title">
+                    <span class="header-kicker">SEHATI Console</span>
+                    <h1>{{ admin_view.name if admin_view else 'Dashboard' }}</h1>
+                </div>
+                <div class="header-actions">
+                    <button class="icon-action" type="button" aria-label="Search">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    <button class="icon-action has-dot" type="button" aria-label="Notifications">
+                        <i class="fas fa-bell"></i>
+                    </button>
+                    <button class="icon-action theme-toggle" type="button" data-theme-toggle aria-label="Toggle dark mode" title="Toggle dark mode">
+                        <i class="fas fa-moon" data-theme-icon></i>
+                    </button>
+                    <a href="{{ url_for('admin_auth.logout') }}" class="btn-motion btn-motion-outline">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                    <a href="{{ url_for('user.create_view') }}" class="btn-motion btn-motion-primary">
+                        <i class="fas fa-plus-circle"></i> Add Patient
+                    </a>
+                </div>
+            </header>
+
+            {% block body %}{% endblock %}
+
+            <footer class="admin-footer">
+                <div class="footer-links">
+                    <span>English</span>
+                    <span>Privacy Policy</span>
+                    <span>Developer API</span>
+                </div>
+                <div class="footer-icons">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+            </footer>
+        </main>
+    </div>
+    <script>
+        (function () {
+            const key = 'smart-farmasi-admin-theme';
+
+            function getTheme() {
+                try {
+                    return localStorage.getItem(key) || document.documentElement.getAttribute('data-theme') || 'light';
+                } catch (error) {
+                    return document.documentElement.getAttribute('data-theme') || 'light';
+                }
+            }
+
+            function applyTheme(theme, persist) {
+                document.documentElement.setAttribute('data-theme', theme);
+                if (persist) {
+                    try {
+                        localStorage.setItem(key, theme);
+                    } catch (error) {}
+                }
+
+                document.querySelectorAll('[data-theme-toggle]').forEach(function (button) {
+                    const icon = button.querySelector('[data-theme-icon]');
+                    const isDark = theme === 'dark';
+                    button.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+                    button.setAttribute('title', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+                    if (icon) {
+                        icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+                    }
+                });
+            }
+
+            applyTheme(getTheme(), false);
+
+            document.querySelectorAll('[data-theme-toggle]').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    applyTheme(getTheme() === 'dark' ? 'light' : 'dark', true);
+                });
+            });
+        })();
+    </script>
+{% endblock %}

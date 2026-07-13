@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEHATI - API Gateway Status</title>
+    <script>
+        (function () {
+            const key = 'sehati-landing-theme';
+            try {
+                const saved = localStorage.getItem(key);
+                const systemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                document.documentElement.setAttribute('data-theme', saved || (systemDark ? 'dark' : 'light'));
+            } catch (error) {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --bg: #F8FAFC;
+            --main: #0D9488;       /* Primary clinical Teal */
+            --accent: #0EA5E9;     /* Secondary Sky Blue */
+            --black: #1E293B;      /* Slate-800 text */
+            --white: #FFFFFF;      /* Card background */
+            --border: 1px solid #E2E8F0;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+            --card-hover: translateY(-4px);
+        }
+
+        html[data-theme="dark"] {
+            --bg: #0B0F19;         /* Medical navy dark background */
+            --main: #14B8A6;       /* Bright Teal accent */
+            --accent: #38BDF8;     /* Sky blue accent */
+            --black: #F8FAFC;      /* White-slate text */
+            --white: #111827;      /* Dark Card Background */
+            --border: 1px solid #1F2937;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg);
+            color: var(--black);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Abstract background glow shapes */
+        body::before {
+            content: '';
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(13, 148, 136, 0.08) 0%, rgba(255,255,255,0) 70%);
+            top: -100px;
+            left: -100px;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        body::after {
+            content: '';
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(14, 165, 233, 0.08) 0%, rgba(255,255,255,0) 70%);
+            bottom: -100px;
+            right: -100px;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        header {
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand img {
+            width: 36px;
+            height: 36px;
+            object-fit: contain;
+        }
+
+        .brand-name {
+            font-weight: 800;
+            font-size: 1.3rem;
+            letter-spacing: -0.5px;
+        }
+
+        .theme-toggle {
+            background: var(--white);
+            border: var(--border);
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--black);
+            box-shadow: var(--shadow);
+        }
+
+        .theme-toggle:hover {
+            transform: translateY(-2px);
+            background: #E2E8F0;
+        }
+        html[data-theme="dark"] .theme-toggle:hover {
+            background: #1F2937;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        .landing-card {
+            background: var(--white);
+            border: var(--border);
+            box-shadow: var(--shadow);
+            border-radius: 24px;
+            width: 100%;
+            max-width: 900px;
+            padding: 45px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .hero-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .hero-section .logo-large {
+            width: 72px;
+            height: 72px;
+            border-radius: 18px;
+            box-shadow: 0 10px 20px rgba(13, 148, 136, 0.15);
+            margin-bottom: 20px;
+            object-fit: contain;
+        }
+
+        .hero-section h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 12px;
+            letter-spacing: -1px;
+        }
+
+        .hero-section p {
+            font-size: 0.95rem;
+            color: #64748B;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+            font-weight: 500;
+        }
+        html[data-theme="dark"] .hero-section p {
+            color: #94A3B8;
+        }
+
+        /* Health Systems Grid */
+        .system-status-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 40px;
+        }
+
+        .status-card {
+            background: var(--bg);
+            border: var(--border);
+            border-radius: 16px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .status-card:hover {
+            transform: var(--card-hover);
+        }
+
+        .status-icon-box {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: rgba(13, 148, 136, 0.1);
+            color: var(--main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+
+        .status-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .status-info .label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #64748B;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-info .value {
+            font-size: 0.85rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Pulse indicators */
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #10B981;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 8px #10B981;
+            animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse-ring {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: .5; transform: scale(1.2); }
+        }
+
+        /* Database metrics row */
+        .metrics-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 40px;
+        }
+
+        .metric-card {
+            border: var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            background: var(--white);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.01);
+            transition: all 0.2s ease;
+        }
+
+        .metric-card:hover {
+            transform: var(--card-hover);
+            box-shadow: var(--shadow);
+        }
+
+        .metric-card strong {
+            display: block;
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--main);
+        }
+
+        .metric-card span {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #64748B;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+            display: block;
+        }
+        html[data-theme="dark"] .metric-card span {
+            color: #94A3B8;
+        }
+
+        /* Main Gateway Actions */
+        .action-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .btn-sehati {
+            padding: 12px 28px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            border-radius: 12px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-sehati-primary {
+            background-color: var(--main);
+            color: #FFFFFF;
+            box-shadow: 0 4px 12px rgba(13, 148, 136, 0.2);
+        }
+
+        .btn-sehati-primary:hover {
+            background-color: #0b7c77;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(13, 148, 136, 0.3);
+            color: #FFFFFF;
+        }
+
+        .btn-sehati-secondary {
+            background-color: var(--white);
+            color: var(--black);
+            border: var(--border);
+            box-shadow: var(--shadow);
+        }
+
+        .btn-sehati-secondary:hover {
+            background-color: var(--bg);
+            transform: translateY(-2px);
+            color: var(--black);
+        }
+
+        /* ECG Heartbeat line vector across card */
+        .ecg-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 40' fill='none' stroke='rgba(13, 148, 136, 0.05)' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpath d='M0,20 L60,20 L70,10 L75,30 L80,5 L85,35 L90,20 L100,20 L105,15 L110,25 L115,20 L200,20' /%3e%3c/svg%3e");
+            background-repeat: repeat-x;
+            background-size: auto 100%;
+            animation: scroll-ecg 8s linear infinite;
+            opacity: 0.8;
+            pointer-events: none;
+        }
+        html[data-theme="dark"] .ecg-overlay {
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 40' fill='none' stroke='rgba(20, 184, 166, 0.05)' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpath d='M0,20 L60,20 L70,10 L75,30 L80,5 L85,35 L90,20 L100,20 L105,15 L110,25 L115,20 L200,20' /%3e%3c/svg%3e");
+        }
+
+        @keyframes scroll-ecg {
+            from { background-position-x: 0; }
+            to { background-position-x: 200px; }
+        }
+
+        footer {
+            padding: 30px;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #94A3B8;
+            font-weight: 600;
+            border-top: var(--border);
+            background-color: var(--white);
+        }
+
+        @media (max-width: 768px) {
+            .system-status-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .metrics-row {
+                grid-template-columns: 1fr;
+            }
+            .action-container {
+                flex-direction: column;
+            }
+            .btn-sehati {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="brand">
+            <img src="/static/app_logo.png" alt="SEHATI Logo">
+            <span class="brand-name">SEHATI</span>
+        </div>
+        <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle Theme" title="Toggle Theme">
+            <i class="fas fa-moon" data-theme-icon></i>
+        </button>
+    </header>
+
+    <main>
+        <div class="landing-card">
+            <div class="hero-section">
+                <img src="/static/app_logo.png" alt="SEHATI Logo" class="logo-large">
+                <h1>SEHATI Gateway Services</h1>
+                <p>Unified core engine powering patient operations, medical scans, disease monitoring, and AI medical assistants securely.</p>
+            </div>
+
+            <!-- Health Status Panel -->
+            <div class="system-status-grid">
+                <div class="status-card">
+                    <div class="status-icon-box"><i class="fas fa-network-wired"></i></div>
+                    <div class="status-info">
+                        <span class="label">API Gateway</span>
+                        <span class="value"><span class="pulse-dot"></span> Online</span>
+                    </div>
+                </div>
+                <div class="status-card">
+                    <div class="status-icon-box"><i class="fas fa-database"></i></div>
+                    <div class="status-info">
+                        <span class="label">Database</span>
+                        <span class="value"><span class="pulse-dot"></span> Connected</span>
+                    </div>
+                </div>
+                <div class="status-card">
+                    <div class="status-icon-box"><i class="fas fa-brain"></i></div>
+                    <div class="status-info">
+                        <span class="label">Gemini AI</span>
+                        <span class="value"><span class="pulse-dot"></span> Active</span>
+                    </div>
+                </div>
+                <div class="status-card">
+                    <div class="status-icon-box"><i class="fas fa-cloud"></i></div>
+                    <div class="status-info">
+                        <span class="label">Firebase</span>
+                        <span class="value"><span class="pulse-dot"></span> Connected</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Stats Panel -->
+            <div class="metrics-row">
+                <div class="metric-card">
+                    <strong>{{ total_users }}</strong>
+                    <span>Total Patients</span>
+                </div>
+                <div class="metric-card">
+                    <strong>{{ total_activities }}</strong>
+                    <span>Logs Processed</span>
+                </div>
+                <div class="metric-card">
+                    <strong>{{ total_news }}</strong>
+                    <span>Disease Alerts</span>
+                </div>
+            </div>
+
+            <!-- User Actions -->
+            <div class="action-container">
+                <a href="/admin" class="btn-sehati btn-sehati-primary">
+                    <i class="fas fa-lock"></i> Enter Admin Console
+                </a>
+                <a href="#" class="btn-sehati btn-sehati-secondary" onclick="alert('Sehati Mobile App installer (APK) will be available here.'); return false;">
+                    <i class="fab fa-android"></i> Download App Client
+                </a>
+            </div>
+
+            <!-- ECG background overlay decoration -->
+            <div class="ecg-overlay"></div>
+        </div>
+    </main>
+
+    <footer>
+        &copy; 2026 SEHATI Health Systems. All rights reserved. Secure Health Information Exchange.
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const themeKey = 'sehati-landing-theme';
+
+        function getTheme() {
+            try {
+                return localStorage.getItem(themeKey) || document.documentElement.getAttribute('data-theme') || 'light';
+            } catch (error) {
+                return document.documentElement.getAttribute('data-theme') || 'light';
+            }
+        }
+
+        function applyTheme(theme, persist) {
+            document.documentElement.setAttribute('data-theme', theme);
+            if (persist) {
+                try {
+                    localStorage.setItem(themeKey, theme);
+                } catch (error) {}
+            }
+
+            document.querySelectorAll('[data-theme-toggle]').forEach(function (button) {
+                const icon = button.querySelector('[data-theme-icon]');
+                const isDark = theme === 'dark';
+                button.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+                button.setAttribute('title', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+                if (icon) {
+                    icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+                }
+            });
+        }
+
+        window.onload = function () {
+            applyTheme(getTheme(), false);
+
+            document.querySelectorAll('[data-theme-toggle]').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    const nextTheme = getTheme() === 'dark' ? 'light' : 'dark';
+                    applyTheme(nextTheme, true);
+                });
+            });
+        };
+    </script>
+</body>
+</html>
